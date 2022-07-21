@@ -6,6 +6,7 @@ namespace Tests\Unit;
 
 use App\Router;
 use PHPUnit\Framework\TestCase;
+use App\Exceptions\RouteNotFoundException;
 
 class RouterTest extends TestCase
 {
@@ -55,5 +56,55 @@ class RouterTest extends TestCase
     public function testNoRoutesRegisterAtCreation(): void
     {
         $this->assertEmpty($this->router->routes());
+    }
+
+    /**
+     * @dataProvider methodRouteActionProvider
+     */
+    public function testExceptionIsThrownWhenRouteIsNotFound($method, $route): void
+    {
+        $this->expectException(RouteNotFoundException::class);
+        $this->expectExceptionMessage('404 Not Found');
+        
+        $users = new class{
+            public function delate(): void
+            {}
+        };
+        $this->router->get('/users', ['Exception', 'index']);
+        $this->router->post('/users', [$users::class, 'store']);
+
+        $this->router->resolve($route, $method);
+    }
+
+    public function methodRouteActionProvider(): array
+    {
+        return [
+            ['get', '/not-found'],
+            ['post', '/invoices'],
+            ['post', '/users'],
+        ];
+    }
+
+    public function testProperlyCallACallableRegisteredRoute(): void
+    {
+        $this->router->get('/users', function () {
+            return true;
+        });
+       
+        $this->assertTrue($this->router->resolve('/users', 'get'));
+    }
+
+    public function testProperlyCallAClassRegisteredRoute(): void
+    {
+        $users = new class() {
+            public function delete(): bool
+            {
+                return true;
+            }
+        };
+
+        $this->router->get('/users', [$users::class, 'delete']);
+
+        $this->assertTrue($this->router->resolve('/users', 'get'));
     }
 }
