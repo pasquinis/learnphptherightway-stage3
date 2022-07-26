@@ -7,12 +7,13 @@ namespace App\Controllers;
 use App\View;
 use App\App;
 use App\Services\InvoiceService;
+use App\Container;
 
 class HomeController
 {
     public function index(): View
     {
-        App::$container->get(InvoiceService::class)->process([ 'user' => 'Simone'], 25);
+        (new Container())->get(InvoiceService::class)->process([ 'user' => 'Simone'], 25);
 
         return View::make('index');
     }

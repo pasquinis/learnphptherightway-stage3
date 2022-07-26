@@ -4,8 +4,11 @@ namespace Test\Unit;
 
 use App\Config;
 use App\Container;
+use App\Exceptions\Container\ContainerException;
 use App\Exceptions\Container\NotFoundException;
+use App\Services\InvoiceService;
 use PHPUnit\Framework\TestCase;
+use Psr\Container\ContainerExceptionInterface;
 
 class ContainerTest extends TestCase
 {
@@ -24,10 +27,10 @@ class ContainerTest extends TestCase
 
     public function testShouldRiseExceptionIfClassIsNotBinding(): void
     {
-        $this->expectException(NotFoundException::class);
-        $this->expectExceptionMessage('Class NotFound not found');
-
-        $this->container->get('NotFound');
+        $this->expectException(ContainerException::class);
+        $this->expectExceptionMessage('Class Psr\Container\ContainerExceptionInterface is not instantiable.');
+        
+        $this->container->get(ContainerExceptionInterface::class);
     }
 
     public function testShouldAbleToSetAClass(): void

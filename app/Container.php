@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace App;
 
 use App\Exceptions\Container\NotFoundException;
+use App\Exceptions\Container\ContainerException;
+use Exception;
 use Psr\Container\ContainerInterface;
+use ReflectionClass;
 
 class Container implements ContainerInterface
 {
@@ -17,13 +20,24 @@ class Container implements ContainerInterface
     }
     public function get(string $id)
     {
-        if (! $this->has($id)) {
-           throw new NotFoundException("Class " . $id . " not found");
+        if ($this->has($id)) {
+            $entry = $this->entries[$id];
+
+            return call_user_func($entry, $this);
         }
 
-        $entry = $this->entries[$id];
+        $this->register($id);
 
-        return call_user_func($entry, $this);
+        throw new NotFoundException('Class ' . $id . ' not binding');
+    }
+
+    public function register(string $id)
+    {
+        $reflactionClass = new ReflectionClass($id);
+
+        if (! $reflactionClass->isInstantiable()) {
+            throw new ContainerException('Class ' . $id . ' is not instantiable.');
+        }
     }
     
     public function has(string $id): bool
